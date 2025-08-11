@@ -71,7 +71,7 @@ export default function Home() {
             ResFinder
           </h1>
           <p className="text-xl text-gray-600">
-            Find a direct link to a restaurant's reservation page
+            Find a direct link to a restaurant&apos;s reservation page
           </p>
         </div>
 
@@ -82,7 +82,7 @@ export default function Home() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyPress={handleKeyPress}
+              onKeyDown={handleKeyPress}
               placeholder="Search by name"
               className="w-full px-6 py-4 text-lg border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
