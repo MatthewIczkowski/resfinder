@@ -1,103 +1,149 @@
-import Image from "next/image";
+'use client'
+
+import { useState } from 'react'
+import { supabase, Restaurant } from '@/lib/supabase'
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [searchQuery, setSearchQuery] = useState('')
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [hasSearched, setHasSearched] = useState(false)
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) return
+
+    setIsLoading(true)
+    setHasSearched(true)
+
+    try {
+      const { data, error } = await supabase
+        .from('restaurants')
+        .select('*')
+        .or(`name.ilike.%${searchQuery}%,location.ilike.%${searchQuery}%,aliases.ilike.%${searchQuery}%`)
+        .limit(20)
+
+      if (error) {
+        console.error('Search error:', error)
+        setRestaurants([])
+      } else {
+        setRestaurants(data || [])
+      }
+    } catch (error) {
+      console.error('Search failed:', error)
+      setRestaurants([])
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch()
+    }
+  }
+
+  const getButtonColors = (portal: string) => {
+    const portalLower = portal.toLowerCase()
+    switch (portalLower) {
+      case 'opentable':
+        return 'bg-red-600 hover:bg-red-700'
+      case 'resy':
+        return 'bg-orange-600 hover:bg-orange-800'
+      case 'tock':
+        return 'bg-blue-600 hover:bg-blue-700'
+      case 'direct':
+        return 'bg-black hover:bg-gray-800'
+      case 'yelp':
+        return 'bg-yellow-600 hover:bg-yellow-700'
+      case 'google':
+        return 'bg-green-600 hover:bg-green-700'
+      default:
+        return 'bg-gray-600 hover:bg-gray-700'
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="container mx-auto px-4 py-16">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h1 className="text-5xl font-bold text-gray-900 mb-4">
+            ResFinder
+          </h1>
+          <p className="text-xl text-gray-600">
+            Find a direct link to a restaurant's reservation page
+          </p>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        {/* Search Bar */}
+        <div className="max-w-2xl mx-auto mb-12">
+          <div className="relative">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Search by name"
+              className="w-full px-6 py-4 text-lg border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            <button 
+              onClick={handleSearch}
+              disabled={isLoading}
+              className="absolute right-2 top-2 bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition-colors disabled:bg-gray-400"
+            >
+              {isLoading ? 'Searching...' : 'Search'}
+            </button>
+          </div>
+        </div>
+
+        {/* Search Results */}
+        {hasSearched && (
+          <div className="max-w-4xl mx-auto">
+            {isLoading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="mt-4 text-gray-600">Searching restaurants...</p>
+              </div>
+            ) : restaurants.length > 0 ? (
+              <div className="space-y-4">
+                <h2 className="text-2xl font-semibold text-gray-900 mb-6">
+                  Found {restaurants.length} restaurant{restaurants.length !== 1 ? 's' : ''}
+                </h2>
+                {restaurants.map((restaurant) => (
+                  <div key={restaurant.id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                          {restaurant.name}
+                        </h3>
+                        <p className="text-gray-600 mb-3">{restaurant.location}</p>
+                        {/* <div className="flex items-center gap-2">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            {restaurant.booking_portal}
+                          </span>
+                        </div> */}
+                      </div>
+                                                                    <a
+                         href={restaurant.booking_url}
+                         target="_blank"
+                         rel="noopener noreferrer"
+                         className={`${getButtonColors(restaurant.booking_portal)} text-white px-4 py-2 rounded-lg transition-colors font-medium`}
+                       >
+                         {restaurant.booking_portal}
+                       </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-gray-600 text-lg">No restaurants found matching your search.</p>
+                <p className="text-gray-500 mt-2">Try searching for a different restaurant, location, or cuisine.</p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
-  );
+  )
 }
