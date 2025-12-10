@@ -1,13 +1,23 @@
 'use client'
 
-import { useState } from 'react'
-import { supabase, Restaurant } from '@/lib/supabase'
+import { useState, useEffect } from 'react'
+import { searchRestaurants, type Restaurant } from '@/lib/actions'
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState('')
   const [restaurants, setRestaurants] = useState<Restaurant[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [hasSearched, setHasSearched] = useState(false)
+  const [debouncedQuery, setDebouncedQuery] = useState('')
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(searchQuery)
+    }, 500) // Wait 500ms after user stops typing
+
+    return () => clearTimeout(timer)
+  }, [searchQuery])
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return
@@ -16,11 +26,7 @@ export default function Home() {
     setHasSearched(true)
 
     try {
-      const { data, error } = await supabase
-        .from('restaurants')
-        .select('*')
-        .or(`name.ilike.%${searchQuery}%,location.ilike.%${searchQuery}%,aliases.ilike.%${searchQuery}%`)
-        .limit(20)
+      const { data, error } = await searchRestaurants(searchQuery)
 
       if (error) {
         console.error('Search error:', error)
